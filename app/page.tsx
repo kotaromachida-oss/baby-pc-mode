@@ -7,7 +7,7 @@ export default function Home() {
         <div className="hero-card">
           <div className="hero-copy">
             <p className="eyebrow">Instant play mode for shared family PCs</p>
-            <h1>乱入されたPC時間を、子どもが主役の5分に変える。</h1>
+            <h1>諦めてPCを明け渡そう</h1>
             <p className="lead">
               親が作業中でも、いったんPCを子どもに譲る。その瞬間に、今の作業はそのままで、
               キーボードを押すたび楽しい反応が返るプレイモードへ切り替えます。
@@ -42,7 +42,7 @@ export default function Home() {
                   </div>
                   <div className="summary-step">
                     <strong>3.</strong>
-                    <span>キーを押すたび色と形がはじける</span>
+                    <span>どのキーでも色と形がはじける</span>
                   </div>
                 </div>
                 <div className="summary-note">

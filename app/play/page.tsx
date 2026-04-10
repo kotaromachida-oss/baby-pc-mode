@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 const CELEBRATIONS = [
   "わあ!",
@@ -15,6 +15,33 @@ const CELEBRATIONS = [
 ];
 
 const SHAPES = ["●", "▲", "■", "★", "◆", "✿"];
+
+const SPECIAL_KEY_LABELS: Record<string, string> = {
+  Escape: "esc",
+  Esc: "esc",
+  " ": "space",
+  Spacebar: "space",
+  Enter: "enter",
+  Tab: "tab",
+  Shift: "shift",
+  Control: "ctrl",
+  Alt: "alt",
+  Meta: "win",
+  OS: "win",
+  ArrowUp: "up",
+  ArrowDown: "down",
+  ArrowLeft: "left",
+  ArrowRight: "right",
+  Backspace: "back",
+  Delete: "delete",
+  CapsLock: "caps",
+  Home: "home",
+  End: "end",
+  PageUp: "page up",
+  PageDown: "page down",
+  Insert: "insert",
+  ContextMenu: "menu",
+};
 
 type Burst = {
   id: number;
@@ -33,11 +60,28 @@ function pickRandom<T>(items: T[]) {
   return items[Math.floor(Math.random() * items.length)];
 }
 
+function formatKeyLabel(key: string) {
+  if (SPECIAL_KEY_LABELS[key]) {
+    return SPECIAL_KEY_LABELS[key];
+  }
+
+  if (/^F\d{1,2}$/.test(key)) {
+    return key.toLowerCase();
+  }
+
+  if (key.length === 1) {
+    return key === " " ? "space" : key.toLowerCase();
+  }
+
+  return "tap";
+}
+
 export default function PlayPage() {
   const [bursts, setBursts] = useState<Burst[]>([]);
   const [pressedKey, setPressedKey] = useState("space");
   const [cheerCount, setCheerCount] = useState(0);
   const [gradientSeed, setGradientSeed] = useState(32);
+  const stageRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     async function enterFullscreen() {
@@ -52,9 +96,7 @@ export default function PlayPage() {
       }
     }
 
-    void enterFullscreen();
-
-    const createBurst = () => {
+    function createBurst() {
       const nextBurst: Burst = {
         id: Date.now() + Math.random(),
         x: randomBetween(12, 88),
@@ -67,24 +109,43 @@ export default function PlayPage() {
       setCheerCount((count) => count + 1);
       setGradientSeed(randomBetween(0, 360));
       setBursts((current) => [...current.slice(-10), nextBurst]);
-    };
+    }
+
+    void enterFullscreen();
+    stageRef.current?.focus();
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      event.preventDefault();
-      setPressedKey(event.key === " " ? "space" : event.key.length === 1 ? event.key : "tap");
+      setPressedKey(formatKeyLabel(event.key));
       createBurst();
+
+      if (event.key !== "Meta" && event.key !== "OS") {
+        event.preventDefault();
+      }
+
+      if (event.key === "Escape") {
+        void enterFullscreen();
+      }
     };
 
     const handlePointerDown = () => {
+      stageRef.current?.focus();
       createBurst();
+    };
+
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement) {
+        stageRef.current?.focus();
+      }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
     };
   }, []);
 
@@ -121,8 +182,8 @@ export default function PlayPage() {
             </Link>
           </div>
 
-          <div className="play-stage">
-            <p className="play-caption">どのキーでも、たのしい</p>
+          <div className="play-stage" ref={stageRef} tabIndex={-1}>
+            <p className="play-caption">esc でも enter でも たのしい</p>
             <div className="big-key">{pressedKey}</div>
             <div className="mini-stats">
               <div>
